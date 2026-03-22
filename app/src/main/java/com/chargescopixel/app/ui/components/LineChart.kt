@@ -2,6 +2,7 @@ package com.chargescopixel.app.ui.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,13 +10,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import kotlin.math.max
-import kotlin.math.min
 
 @Composable
 fun LineChart(
@@ -28,7 +29,12 @@ fun LineChart(
             .fillMaxWidth()
             .height(160.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(color.copy(alpha = 0.08f))
+            .background(
+                Brush.verticalGradient(
+                    listOf(color.copy(alpha = 0.16f), color.copy(alpha = 0.04f))
+                )
+            )
+            .border(1.dp, color.copy(alpha = 0.25f), RoundedCornerShape(16.dp))
     ) {
         if (points.isEmpty()) return@Canvas
 
@@ -49,8 +55,17 @@ fun LineChart(
         drawPath(
             path = path,
             color = color,
-            style = Stroke(width = 6f, cap = StrokeCap.Round)
+            style = Stroke(width = 5f, cap = StrokeCap.Round)
         )
+
+        val lastIndex = points.lastIndex
+        if (lastIndex >= 0) {
+            val lastX = lastIndex * xStep
+            val normalized = (points[lastIndex] - minValue) / range
+            val lastY = size.height - (normalized * (size.height - 12f)) - 6f
+            drawCircle(color = color, radius = 7f, center = Offset(lastX, lastY))
+            drawCircle(color = Color.White.copy(alpha = 0.65f), radius = 3f, center = Offset(lastX, lastY))
+        }
 
         drawLine(
             color = color.copy(alpha = 0.3f),
