@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">ChargeScope Pixel</string>
+    <string name="not_supported">Not supported on this device</string>
+    <string name="monitoring_notification_title">ChargeScope monitoring active</string>
+    <string name="monitoring_notification_text">Logging battery data while charging</string>
+    <string name="overheat_alert_title">Battery overheating alert</string>
+    <string name="slow_charge_alert_title">Slow charging alert</string>
+</resources>

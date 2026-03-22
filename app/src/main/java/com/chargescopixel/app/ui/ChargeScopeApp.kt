@@ -1,0 +1,149 @@
+package com.chargescopixel.app.ui
+
+import android.content.Intent
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Timeline
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.chargescopixel.app.AppContainer
+import com.chargescopixel.app.ui.screens.BatteryHealthScreen
+import com.chargescopixel.app.ui.screens.DashboardScreen
+import com.chargescopixel.app.ui.screens.InsightsScreen
+import com.chargescopixel.app.ui.screens.LiveMonitorScreen
+import com.chargescopixel.app.ui.screens.SessionsScreen
+import com.chargescopixel.app.ui.screens.SettingsScreen
+import com.chargescopixel.app.viewmodel.AppViewModelFactory
+import com.chargescopixel.app.viewmodel.BatteryHealthViewModel
+import com.chargescopixel.app.viewmodel.DashboardViewModel
+import com.chargescopixel.app.viewmodel.InsightsViewModel
+import com.chargescopixel.app.viewmodel.LiveMonitorViewModel
+import com.chargescopixel.app.viewmodel.SessionsViewModel
+import com.chargescopixel.app.viewmodel.SettingsViewModel
+
+private data class AppDestination(
+    val route: String,
+    val label: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector
+)
+
+@Composable
+fun ChargeScopeApp(appContainer: AppContainer) {
+    val navController = rememberNavController()
+    val context = LocalContext.current
+    val factory = remember(appContainer) { AppViewModelFactory(appContainer) }
+
+    val destinations = listOf(
+        AppDestination("dashboard", "Dashboard", Icons.Default.Home),
+        AppDestination("live", "Live", Icons.Default.Bolt),
+        AppDestination("sessions", "Sessions", Icons.Default.Timeline),
+        AppDestination("health", "Health", Icons.Default.BatteryChargingFull),
+        AppDestination("insights", "Insights", Icons.Default.Analytics),
+        AppDestination("settings", "Settings", Icons.Default.Settings)
+    )
+
+    val dashboardVm: DashboardViewModel = viewModel(factory = factory)
+    val liveVm: LiveMonitorViewModel = viewModel(factory = factory)
+    val sessionsVm: SessionsViewModel = viewModel(factory = factory)
+    val healthVm: BatteryHealthViewModel = viewModel(factory = factory)
+    val insightsVm: InsightsViewModel = viewModel(factory = factory)
+    val settingsVm: SettingsViewModel = viewModel(factory = factory)
+
+    LaunchedEffect(Unit) {
+        insightsVm.exportedUri.collect { uri ->
+            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/csv"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            val chooser = Intent.createChooser(sendIntent, "Export ChargeScope CSV")
+            chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ContextCompat.startActivity(context, chooser, null)
+        }
+    }
+
+    Scaffold(
+        bottomBar = {
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentRoute = navBackStackEntry?.destination?.route
+            NavigationBar {
+                destinations.forEach { destination ->
+                    NavigationBarItem(
+                        selected = currentRoute == destination.route,
+                        onClick = {
+                            navController.navigate(destination.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        icon = { Icon(destination.icon, contentDescription = destination.label) },
+                        label = { Text(destination.label) }
+                    )
+                }
+            }
+        }
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = "dashboard",
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable("dashboard") {
+                val summary by dashboardVm.summary.collectAsState()
+                val latest by dashboardVm.latestSession.collectAsState()
+                DashboardScreen(summary, latest)
+            }
+            composable("live") {
+                val samples by liveVm.samples.collectAsState()
+                LiveMonitorScreen(samples)
+            }
+            composable("sessions") {
+                val sessions by sessionsVm.sessions.collectAsState()
+                SessionsScreen(sessions)
+            }
+            composable("health") {
+                val state by healthVm.uiState.collectAsState()
+                BatteryHealthScreen(state)
+            }
+            composable("insights") {
+                val summary by insightsVm.summary.collectAsState()
+                InsightsScreen(summary = summary, onExportCsv = insightsVm::exportCsv)
+            }
+            composable("settings") {
+                val settings by settingsVm.settings.collectAsState()
+                SettingsScreen(
+                    settings = settings,
+                    onAlertsChanged = settingsVm::setAlertsEnabled,
+                    onOverheatChanged = settingsVm::setOverheatThreshold,
+                    onSlowThresholdChanged = settingsVm::setSlowChargingThreshold,
+                    onDynamicColorChanged = settingsVm::setDynamicColor
+                )
+            }
+        }
+    }
+}

@@ -1,0 +1,69 @@
+package com.chargescopixel.app.utils
+
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
+import android.os.PowerManager
+import com.chargescopixel.app.domain.BatterySnapshot
+import com.chargescopixel.app.domain.PlugType
+
+object BatteryReader {
+    fun readSnapshot(context: Context): BatterySnapshot? {
+        val batteryIntent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+            ?: return null
+
+        val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+
+        val level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+        val scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, 100)
+        if (level < 0 || scale <= 0) return null
+
+        val percentage = (level * 100f / scale).toInt()
+        val status = batteryIntent.getIntExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_UNKNOWN)
+        val statusText = when (status) {
+            BatteryManager.BATTERY_STATUS_CHARGING -> "Charging"
+            BatteryManager.BATTERY_STATUS_FULL -> "Full"
+            BatteryManager.BATTERY_STATUS_DISCHARGING -> "Discharging"
+            BatteryManager.BATTERY_STATUS_NOT_CHARGING -> "Not charging"
+            else -> "Unknown"
+        }
+
+        val plugType = when (batteryIntent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0)) {
+            BatteryManager.BATTERY_PLUGGED_USB -> PlugType.USB
+            BatteryManager.BATTERY_PLUGGED_AC -> PlugType.AC
+            BatteryManager.BATTERY_PLUGGED_WIRELESS -> PlugType.WIRELESS
+            else -> PlugType.UNKNOWN
+        }
+
+        val tempDeciC = batteryIntent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0)
+        val voltage = batteryIntent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0)
+
+        val currentNow = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
+            .takeIf { it != Int.MIN_VALUE }
+        val chargeCounter = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
+            .takeIf { it != Int.MIN_VALUE }
+
+        val thermalStatus = runCatching { powerManager.currentThermalStatus }.getOrNull()
+
+        return BatterySnapshot(
+            timestamp = System.currentTimeMillis(),
+            batteryPercent = percentage,
+            chargingStatus = statusText,
+            plugType = plugType,
+            temperatureC = tempDeciC / 10f,
+            voltageMv = voltage,
+            currentNowUa = currentNow,
+            chargeCounterUah = chargeCounter,
+            thermalStatus = thermalStatus
+        )
+    }
+
+    fun isPluggedIn(context: Context): Boolean {
+        val batteryIntent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+            ?: return false
+        val plug = batteryIntent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0)
+        return plug != 0
+    }
+}
