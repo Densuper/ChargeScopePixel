@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -104,12 +105,13 @@ fun ChargeScopeApp(appContainer: AppContainer) {
     }
 
     Scaffold(
-        containerColor = Color.Transparent,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
 
             Surface(
+                color = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp),
                 tonalElevation = 10.dp,
                 shadowElevation = 18.dp,
                 shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
@@ -125,12 +127,12 @@ fun ChargeScopeApp(appContainer: AppContainer) {
                     destinations.forEach { destination ->
                         val selected = currentRoute == destination.route
                         val container = if (selected) {
-                            MaterialTheme.colorScheme.primaryContainer
+                            MaterialTheme.colorScheme.secondaryContainer
                         } else {
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f)
+                            MaterialTheme.colorScheme.surfaceContainerHighest
                         }
                         val content = if (selected) {
-                            MaterialTheme.colorScheme.onPrimaryContainer
+                            MaterialTheme.colorScheme.onSecondaryContainer
                         } else {
                             MaterialTheme.colorScheme.onSurfaceVariant
                         }
@@ -158,7 +160,7 @@ fun ChargeScopeApp(appContainer: AppContainer) {
                                         .size(22.dp)
                                         .clip(CircleShape)
                                         .background(
-                                            if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.24f)
+                                            if (selected) MaterialTheme.colorScheme.secondary.copy(alpha = 0.22f)
                                             else Color.Transparent
                                         ),
                                     contentAlignment = Alignment.Center
@@ -190,7 +192,7 @@ fun ChargeScopeApp(appContainer: AppContainer) {
                     Brush.verticalGradient(
                         listOf(
                             MaterialTheme.colorScheme.background,
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                            MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
                         )
                     )
                 )

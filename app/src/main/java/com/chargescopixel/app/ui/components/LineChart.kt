@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,8 +24,9 @@ fun LineChart(
     points: List<Float>,
     color: Color,
     modifier: Modifier = Modifier,
-    gridColor: Color = color.copy(alpha = 0.22f)
+    gridColor: Color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.52f)
 ) {
+    val markerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
     Canvas(
         modifier = modifier
             .fillMaxWidth()
@@ -89,7 +91,11 @@ fun LineChart(
             val normalized = (points[lastIndex] - minValue) / range
             val lastY = size.height - (normalized * (size.height - 12f)) - 6f
             drawCircle(color = color, radius = 7f, center = Offset(lastX, lastY))
-            drawCircle(color = Color.White.copy(alpha = 0.65f), radius = 3f, center = Offset(lastX, lastY))
+            drawCircle(
+                color = markerColor,
+                radius = 3f,
+                center = Offset(lastX, lastY)
+            )
         }
 
         drawLine(
