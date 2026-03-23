@@ -9,7 +9,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.chargescopixel.app.R
@@ -62,7 +61,7 @@ fun LiveMonitorScreen(samples: List<BatterySampleEntity>) {
                     valueText = "${latest.batteryPercent}%",
                     trendText = buildTrend(points, "%"),
                     points = points,
-                    lineColor = Color(0xFF8FD3FF)
+                    lineColor = MaterialTheme.colorScheme.primary
                 )
             }
             item {
@@ -72,7 +71,7 @@ fun LiveMonitorScreen(samples: List<BatterySampleEntity>) {
                     valueText = formatCelsius(latest.temperatureC),
                     trendText = buildTrend(points, "°C"),
                     points = points,
-                    lineColor = Color(0xFFFFA57A)
+                    lineColor = MaterialTheme.colorScheme.tertiary
                 )
             }
             item {
@@ -84,7 +83,7 @@ fun LiveMonitorScreen(samples: List<BatterySampleEntity>) {
                     valueText = "${"%.2f".format(volts)} V",
                     trendText = buildTrend(points, "V"),
                     points = points,
-                    lineColor = Color(0xFF9CF7D5)
+                    lineColor = MaterialTheme.colorScheme.secondary
                 )
             }
             item {
@@ -103,7 +102,7 @@ fun LiveMonitorScreen(samples: List<BatterySampleEntity>) {
                         valueText = "${"%.0f".format(currentMa ?: 0.0)} mA",
                         trendText = buildTrend(currentSeries, "mA"),
                         points = currentSeries,
-                        lineColor = Color(0xFFB5B2FF)
+                        lineColor = MaterialTheme.colorScheme.primaryContainer
                     )
                 }
             }

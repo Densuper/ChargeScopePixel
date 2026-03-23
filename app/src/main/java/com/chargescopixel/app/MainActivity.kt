@@ -7,9 +7,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.core.content.ContextCompat
 import com.chargescopixel.app.service.ChargingMonitorService
 import com.chargescopixel.app.ui.ChargeScopeApp
+import com.chargescopixel.app.data.repository.AppSettings
 import com.chargescopixel.app.ui.theme.ChargeScopeTheme
 
 class MainActivity : ComponentActivity() {
@@ -24,8 +27,10 @@ class MainActivity : ComponentActivity() {
         ChargingMonitorService.ensureMonitoringMatchesCurrentPowerState(this)
 
         setContent {
-            ChargeScopeTheme {
-                ChargeScopeApp(appContainer = (application as ChargeScopeApplication).appContainer)
+            val container = (application as ChargeScopeApplication).appContainer
+            val settings by container.settingsRepository.settings.collectAsState(initial = AppSettings())
+            ChargeScopeTheme(dynamicColor = settings.dynamicColorEnabled) {
+                ChargeScopeApp(appContainer = container)
             }
         }
     }
