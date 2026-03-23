@@ -3,8 +3,8 @@ package com.chargescopixel.app.service
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.content.ContextCompat
 import com.chargescopixel.app.ChargeScopeApplication
 import com.chargescopixel.app.R
@@ -27,9 +27,11 @@ class ChargingMonitorService : Service() {
     override fun onCreate() {
         super.onCreate()
         NotificationUtils.ensureChannels(this)
+        Log.d(TAG, "ChargingMonitorService created")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(TAG, "onStartCommand action=${intent?.action}")
         when (intent?.action) {
             ACTION_STOP -> {
                 stopMonitoringAndSelf()
@@ -42,6 +44,7 @@ class ChargingMonitorService : Service() {
 
         monitoringJob = serviceScope.launch {
             if (!BatteryReader.isPluggedIn(this@ChargingMonitorService)) {
+                Log.d(TAG, "Device is not plugged in; stopping monitor service")
                 stopMonitoringAndSelf()
                 return@launch
             }
@@ -53,6 +56,7 @@ class ChargingMonitorService : Service() {
 
             while (true) {
                 if (!BatteryReader.isPluggedIn(this@ChargingMonitorService)) {
+                    Log.d(TAG, "Unplug detected in monitor loop; closing session")
                     repository.closeOpenSession(BatteryReader.readSnapshot(this@ChargingMonitorService))
                     stopMonitoringAndSelf()
                     break
@@ -61,11 +65,18 @@ class ChargingMonitorService : Service() {
                 val snapshot = BatteryReader.readSnapshot(this@ChargingMonitorService)
                 if (snapshot != null) {
                     repository.addSample(snapshot)
+                    Log.d(
+                        TAG,
+                        "Sample saved: ${snapshot.batteryPercent}% temp=${snapshot.temperatureC}C " +
+                            "voltage=${snapshot.voltageMv}mV current=${snapshot.currentNowUa}"
+                    )
                     val settings = settingsRepository.settings.first()
                     if (settings.alertsEnabled) {
                         maybeNotifyOverheating(snapshot.temperatureC, settings.overheatThresholdC)
                         maybeNotifySlowCharging(repository, settings.slowChargeThresholdPercentPerMinute)
                     }
+                } else {
+                    Log.w(TAG, "Battery snapshot unavailable; skipping sample")
                 }
 
                 delay(SAMPLE_INTERVAL_MS)
@@ -104,16 +115,18 @@ class ChargingMonitorService : Service() {
     }
 
     private fun stopMonitoringAndSelf() {
+        monitoringJob?.cancel()
         serviceScope.launch {
             val repository = (application as ChargeScopeApplication).appContainer.chargingRepository
             repository.closeOpenSession(BatteryReader.readSnapshot(this@ChargingMonitorService))
+            Log.d(TAG, "Session closed; stopping foreground service")
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
         }
-        monitoringJob?.cancel()
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
     }
 
     override fun onDestroy() {
+        Log.d(TAG, "ChargingMonitorService destroyed")
         monitoringJob?.cancel()
         serviceScope.cancel()
         super.onDestroy()
@@ -128,19 +141,24 @@ class ChargingMonitorService : Service() {
         private const val OVERHEAT_ALERT_ID = 3001
         private const val SLOW_ALERT_ID = 3002
         private const val SAMPLE_INTERVAL_MS = 10_000L
+        private const val TAG = "ChargingMonitorService"
 
         fun start(context: Context) {
             val intent = Intent(context, ChargingMonitorService::class.java).apply {
                 action = ACTION_START
             }
+            Log.d(TAG, "Requesting monitor start")
             ContextCompat.startForegroundService(context, intent)
         }
 
         fun stop(context: Context) {
-            val intent = Intent(context, ChargingMonitorService::class.java).apply {
-                action = ACTION_STOP
-            }
-            context.startService(intent)
+            Log.d(TAG, "Requesting monitor stop")
+            val intent = Intent(context, ChargingMonitorService::class.java).apply { action = ACTION_STOP }
+            runCatching { context.startService(intent) }
+                .onFailure {
+                    Log.w(TAG, "Stop action startService failed, falling back to stopService", it)
+                    context.stopService(Intent(context, ChargingMonitorService::class.java))
+                }
         }
 
         fun ensureMonitoringMatchesCurrentPowerState(context: Context) {
