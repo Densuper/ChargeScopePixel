@@ -23,10 +23,13 @@ data class BatterySampleEntity(
     val timestampMs: Long,
     val batteryPercent: Int,
     val chargingStatus: String,
+    val health: String = "Unknown",
+    val technology: String = "Unknown",
     val plugType: String,
     val temperatureC: Float,
     val voltageMv: Int,
     val currentNowUa: Int?,
     val chargeCounterUah: Int?,
+    val cycleCount: Int? = null,
     val thermalStatus: Int?
 )

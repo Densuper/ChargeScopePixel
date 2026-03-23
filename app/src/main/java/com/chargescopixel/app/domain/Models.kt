@@ -14,11 +14,14 @@ data class BatterySnapshot(
     val timestamp: Long,
     val batteryPercent: Int,
     val chargingStatus: String,
+    val health: String,
+    val technology: String,
     val plugType: PlugType,
     val temperatureC: Float,
     val voltageMv: Int,
     val currentNowUa: Int?,
     val chargeCounterUah: Int?,
+    val cycleCount: Int?,
     val thermalStatus: Int?
 )
 

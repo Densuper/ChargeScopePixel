@@ -90,11 +90,14 @@ class ChargingRepository(
                 timestampMs = snapshot.timestamp,
                 batteryPercent = snapshot.batteryPercent,
                 chargingStatus = snapshot.chargingStatus,
+                health = snapshot.health,
+                technology = snapshot.technology,
                 plugType = snapshot.plugType.name,
                 temperatureC = snapshot.temperatureC,
                 voltageMv = snapshot.voltageMv,
                 currentNowUa = snapshot.currentNowUa,
                 chargeCounterUah = snapshot.chargeCounterUah,
+                cycleCount = snapshot.cycleCount,
                 thermalStatus = snapshot.thermalStatus
             )
         )
@@ -114,11 +117,14 @@ class ChargingRepository(
                 timestamp = it.timestampMs,
                 batteryPercent = it.batteryPercent,
                 chargingStatus = it.chargingStatus,
+                health = it.health,
+                technology = it.technology,
                 plugType = runCatching { PlugType.valueOf(it.plugType) }.getOrElse { PlugType.UNKNOWN },
                 temperatureC = it.temperatureC,
                 voltageMv = it.voltageMv,
                 currentNowUa = it.currentNowUa,
                 chargeCounterUah = it.chargeCounterUah,
+                cycleCount = it.cycleCount,
                 thermalStatus = it.thermalStatus
             )
         }
