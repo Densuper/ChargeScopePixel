@@ -58,9 +58,11 @@ fun LiveMonitorScreen(samples: List<BatterySampleEntity>) {
                 val points = samples.map { it.batteryPercent.toFloat() }
                 MetricChartCard(
                     title = "Battery %",
+                    description = "Charge level over time while monitoring is active.",
                     valueText = "${latest.batteryPercent}%",
                     trendText = buildTrend(points, "%"),
                     points = points,
+                    unitLabel = "%",
                     lineColor = MaterialTheme.colorScheme.primary
                 )
             }
@@ -68,9 +70,11 @@ fun LiveMonitorScreen(samples: List<BatterySampleEntity>) {
                 val points = samples.map { it.temperatureC }
                 MetricChartCard(
                     title = "Temperature",
+                    description = "Battery temperature trend. Higher values can indicate thermal stress.",
                     valueText = formatCelsius(latest.temperatureC),
                     trendText = buildTrend(points, "°C"),
                     points = points,
+                    unitLabel = "°C",
                     lineColor = MaterialTheme.colorScheme.tertiary
                 )
             }
@@ -80,9 +84,11 @@ fun LiveMonitorScreen(samples: List<BatterySampleEntity>) {
                 val volts = latest.voltageMv / 1000.0
                 MetricChartCard(
                     title = "Voltage",
+                    description = "Battery voltage converted from mV to V. Typical charging range is around 3.0V–4.4V.",
                     valueText = "${"%.2f".format(volts)} V",
                     trendText = buildTrend(points, "V"),
                     points = points,
+                    unitLabel = "V",
                     lineColor = MaterialTheme.colorScheme.secondary
                 )
             }
@@ -99,9 +105,11 @@ fun LiveMonitorScreen(samples: List<BatterySampleEntity>) {
                     val currentMa = latest.currentNowUa?.div(1000.0)
                     MetricChartCard(
                         title = "Current",
+                        description = "Instant charging/discharging current converted from uA to mA.",
                         valueText = "${"%.0f".format(currentMa ?: 0.0)} mA",
                         trendText = buildTrend(currentSeries, "mA"),
                         points = currentSeries,
+                        unitLabel = "mA",
                         lineColor = MaterialTheme.colorScheme.primaryContainer
                     )
                 }

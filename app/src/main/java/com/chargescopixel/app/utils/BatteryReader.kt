@@ -53,13 +53,13 @@ object BatteryReader {
         val tempDeciC = batteryIntent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0)
         val voltage = batteryIntent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0)
 
-        val currentNow = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
-            .takeIf { it != Int.MIN_VALUE }
-        val chargeCounter = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
-            .takeIf { it != Int.MIN_VALUE }
-        val cycleCount = if (Build.VERSION.SDK_INT >= 34) { // Build.VERSION_CODES.UPSIDE_DOWN_CAKE
-            // BATTERY_PROPERTY_CYCLE_COUNT is 7
-            batteryManager.getIntProperty(7).takeIf { it != -1 }
+        val currentNow = safeGetIntProperty(batteryManager, BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
+            ?.takeIf { it != Int.MIN_VALUE }
+        val chargeCounter = safeGetIntProperty(batteryManager, BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
+            ?.takeIf { it != Int.MIN_VALUE }
+        val cycleCount = if (Build.VERSION.SDK_INT >= 34) {
+            // BATTERY_PROPERTY_CYCLE_COUNT is hidden on some devices/builds and may throw SecurityException.
+            safeGetIntProperty(batteryManager, 7)?.takeIf { it >= 0 }
         } else {
             null
         }
@@ -87,5 +87,9 @@ object BatteryReader {
             ?: return false
         val plug = batteryIntent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0)
         return plug != 0
+    }
+
+    private fun safeGetIntProperty(batteryManager: BatteryManager, propertyId: Int): Int? {
+        return runCatching { batteryManager.getIntProperty(propertyId) }.getOrNull()
     }
 }

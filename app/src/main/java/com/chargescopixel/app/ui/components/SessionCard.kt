@@ -1,7 +1,6 @@
 package com.chargescopixel.app.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,53 +26,47 @@ fun SessionCard(sessionWithMetrics: SessionWithMetrics, modifier: Modifier = Mod
     val session = sessionWithMetrics.session
     val metrics = sessionWithMetrics.metrics
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f))
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f), RoundedCornerShape(24.dp))
-            .padding(18.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(10.dp))
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
-                .padding(horizontal = 10.dp, vertical = 4.dp)
-        ) {
+    AppCardContainer(modifier = modifier.fillMaxWidth()) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "Session #${session.id}",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
             Text(
-                text = "Session #${session.id}",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary
+                text = "Started ${FormatUtils.formatDate(session.startTimeMs)}",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                AssistChip(
+                    onClick = {},
+                    label = { Text("+${metrics.batteryGained}%") },
+                    colors = AssistChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                )
+                AssistChip(
+                    onClick = {},
+                    label = { Text("${"%.2f".format(metrics.percentPerMinute)}%/min") },
+                    colors = AssistChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                )
+                AssistChip(
+                    onClick = {},
+                    label = { Text("Peak ${"%.1f".format(metrics.peakTempC)}°C") },
+                    colors = AssistChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+                )
+            }
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "Duration ${FormatUtils.formatDuration(metrics.durationMs)}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        Text(
-            text = "Started ${FormatUtils.formatDate(session.startTimeMs)}",
-            style = MaterialTheme.typography.titleMedium
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            AssistChip(
-                onClick = {},
-                label = { Text("+${metrics.batteryGained}%") },
-                colors = AssistChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-            )
-            AssistChip(
-                onClick = {},
-                label = { Text("${"%.2f".format(metrics.percentPerMinute)}%/min") },
-                colors = AssistChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
-            )
-            AssistChip(
-                onClick = {},
-                label = { Text("Peak ${"%.1f".format(metrics.peakTempC)}°C") },
-                colors = AssistChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
-            )
-        }
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = "Duration ${FormatUtils.formatDuration(metrics.durationMs)}",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
 }

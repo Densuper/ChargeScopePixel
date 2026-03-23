@@ -144,11 +144,10 @@ class ChargingMonitorService : Service() {
         private const val TAG = "ChargingMonitorService"
 
         fun start(context: Context) {
-            val intent = Intent(context, ChargingMonitorService::class.java).apply {
-                action = ACTION_START
-            }
+            val intent = Intent(context, ChargingMonitorService::class.java).apply { action = ACTION_START }
             Log.d(TAG, "Requesting monitor start")
-            ContextCompat.startForegroundService(context, intent)
+            runCatching { ContextCompat.startForegroundService(context, intent) }
+                .onFailure { Log.e(TAG, "Failed to start foreground monitor service", it) }
         }
 
         fun stop(context: Context) {
@@ -162,10 +161,14 @@ class ChargingMonitorService : Service() {
         }
 
         fun ensureMonitoringMatchesCurrentPowerState(context: Context) {
-            if (BatteryReader.isPluggedIn(context)) {
-                start(context)
-            } else {
-                stop(context)
+            runCatching {
+                if (BatteryReader.isPluggedIn(context)) {
+                    start(context)
+                } else {
+                    stop(context)
+                }
+            }.onFailure {
+                Log.e(TAG, "Failed to match monitoring state to power state", it)
             }
         }
     }

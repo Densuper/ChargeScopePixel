@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,7 +25,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestNotificationPermissionIfNeeded()
-        ChargingMonitorService.ensureMonitoringMatchesCurrentPowerState(this)
 
         setContent {
             val container = (application as ChargeScopeApplication).appContainer
@@ -33,6 +33,13 @@ class MainActivity : ComponentActivity() {
                 ChargeScopeApp(appContainer = container)
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Run after the activity is visible to reduce launch-time crash risk on strict devices.
+        runCatching { ChargingMonitorService.ensureMonitoringMatchesCurrentPowerState(this) }
+            .onFailure { Log.e("MainActivity", "Monitor sync failed in onStart", it) }
     }
 
     private fun requestNotificationPermissionIfNeeded() {

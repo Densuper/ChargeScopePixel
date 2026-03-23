@@ -22,7 +22,8 @@ import kotlin.math.max
 fun LineChart(
     points: List<Float>,
     color: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    gridColor: Color = color.copy(alpha = 0.22f)
 ) {
     Canvas(
         modifier = modifier
@@ -42,6 +43,30 @@ fun LineChart(
         val minValue = points.minOrNull() ?: return@Canvas
         val range = max(1f, maxValue - minValue)
         val xStep = if (points.size > 1) size.width / (points.size - 1) else size.width
+
+        // Horizontal grid lines
+        val horizontalLines = 4
+        repeat(horizontalLines + 1) { i ->
+            val y = (size.height - 6f) * (i / horizontalLines.toFloat())
+            drawLine(
+                color = gridColor,
+                start = Offset(0f, y),
+                end = Offset(size.width, y),
+                strokeWidth = 1f
+            )
+        }
+
+        // Vertical grid lines
+        val verticalLines = 6
+        repeat(verticalLines + 1) { i ->
+            val x = size.width * (i / verticalLines.toFloat())
+            drawLine(
+                color = gridColor.copy(alpha = 0.8f),
+                start = Offset(x, 0f),
+                end = Offset(x, size.height),
+                strokeWidth = 1f
+            )
+        }
 
         val path = Path()
         points.forEachIndexed { index, value ->
