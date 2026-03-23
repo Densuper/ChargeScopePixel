@@ -19,6 +19,9 @@ interface BatterySampleDao {
     @Query("SELECT * FROM battery_samples ORDER BY timestampMs DESC LIMIT :limit")
     fun observeLatestSamples(limit: Int): Flow<List<BatterySampleEntity>>
 
+    @Query("SELECT * FROM battery_samples ORDER BY timestampMs DESC LIMIT :limit")
+    suspend fun getLatestSamplesOnce(limit: Int): List<BatterySampleEntity>
+
     @Query("SELECT * FROM battery_samples ORDER BY timestampMs ASC")
     suspend fun getAllSamplesOnce(): List<BatterySampleEntity>
 }

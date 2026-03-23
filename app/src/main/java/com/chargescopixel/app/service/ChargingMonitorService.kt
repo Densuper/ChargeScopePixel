@@ -10,6 +10,7 @@ import com.chargescopixel.app.ChargeScopeApplication
 import com.chargescopixel.app.R
 import com.chargescopixel.app.utils.BatteryReader
 import com.chargescopixel.app.utils.NotificationUtils
+import com.chargescopixel.app.widget.ChargeScopeWidgetUpdater
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -65,6 +66,7 @@ class ChargingMonitorService : Service() {
                 val snapshot = BatteryReader.readSnapshot(this@ChargingMonitorService)
                 if (snapshot != null) {
                     repository.addSample(snapshot)
+                    ChargeScopeWidgetUpdater.requestRefresh(this@ChargingMonitorService)
                     Log.d(
                         TAG,
                         "Sample saved: ${snapshot.batteryPercent}% temp=${snapshot.temperatureC}C " +
@@ -119,6 +121,7 @@ class ChargingMonitorService : Service() {
         serviceScope.launch {
             val repository = (application as ChargeScopeApplication).appContainer.chargingRepository
             repository.closeOpenSession(BatteryReader.readSnapshot(this@ChargingMonitorService))
+            ChargeScopeWidgetUpdater.requestRefresh(this@ChargingMonitorService)
             Log.d(TAG, "Session closed; stopping foreground service")
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()

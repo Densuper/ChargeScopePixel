@@ -34,6 +34,19 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".widget.ChargeScopeWidgetProvider"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.chargescopixel.app.widget.REFRESH" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/charge_scope_widget_info" />
+        </receiver>
+
         <service
             android:name=".service.ChargingMonitorService"
             android:enabled="true"
