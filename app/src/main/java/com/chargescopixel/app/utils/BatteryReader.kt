@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
+import android.os.Build
 import android.os.PowerManager
 import com.chargescopixel.app.domain.BatterySnapshot
 import com.chargescopixel.app.domain.PlugType
@@ -30,6 +31,18 @@ object BatteryReader {
             else -> "Unknown"
         }
 
+        val health = when (batteryIntent.getIntExtra(BatteryManager.EXTRA_HEALTH, BatteryManager.BATTERY_HEALTH_UNKNOWN)) {
+            BatteryManager.BATTERY_HEALTH_GOOD -> "Good"
+            BatteryManager.BATTERY_HEALTH_OVERHEAT -> "Overheat"
+            BatteryManager.BATTERY_HEALTH_DEAD -> "Dead"
+            BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE -> "Over Voltage"
+            BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE -> "Unspecified Failure"
+            BatteryManager.BATTERY_HEALTH_COLD -> "Cold"
+            else -> "Unknown"
+        }
+
+        val technology = batteryIntent.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY) ?: "Unknown"
+
         val plugType = when (batteryIntent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0)) {
             BatteryManager.BATTERY_PLUGGED_USB -> PlugType.USB
             BatteryManager.BATTERY_PLUGGED_AC -> PlugType.AC
@@ -44,6 +57,12 @@ object BatteryReader {
             .takeIf { it != Int.MIN_VALUE }
         val chargeCounter = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
             .takeIf { it != Int.MIN_VALUE }
+        val cycleCount = if (Build.VERSION.SDK_INT >= 34) { // Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+            // BATTERY_PROPERTY_CYCLE_COUNT is 7
+            batteryManager.getIntProperty(7).takeIf { it != -1 }
+        } else {
+            null
+        }
 
         val thermalStatus = runCatching { powerManager.currentThermalStatus }.getOrNull()
 
@@ -51,11 +70,14 @@ object BatteryReader {
             timestamp = System.currentTimeMillis(),
             batteryPercent = percentage,
             chargingStatus = statusText,
+            health = health,
+            technology = technology,
             plugType = plugType,
             temperatureC = tempDeciC / 10f,
             voltageMv = voltage,
             currentNowUa = currentNow,
             chargeCounterUah = chargeCounter,
+            cycleCount = cycleCount,
             thermalStatus = thermalStatus
         )
     }

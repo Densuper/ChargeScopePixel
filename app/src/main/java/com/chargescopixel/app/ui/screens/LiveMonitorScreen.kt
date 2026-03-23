@@ -35,7 +35,23 @@ fun LiveMonitorScreen(samples: List<BatterySampleEntity>) {
                 StatCard(
                     title = "Battery",
                     value = "${latest.batteryPercent}%",
-                    subtitle = "${latest.chargingStatus} • ${latest.plugType}",
+                    subtitle = "${latest.chargingStatus} • ${latest.plugType} • ${latest.health} Health",
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            item {
+                StatCard(
+                    title = "Technology",
+                    value = latest.technology,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            item {
+                StatCard(
+                    title = "Cycle Count",
+                    value = latest.cycleCount?.toString() ?: stringResource(id = R.string.not_supported),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
